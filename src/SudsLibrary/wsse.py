@@ -76,8 +76,8 @@ class AutoUsernameToken(UsernameToken):
     def setnonce(self, text=None):
         if text is None:
             hash = sha1()
-            hash.update(str(random()))
-            hash.update(iso_utc())
+            hash.update(str(random()).encode("UTF-8"))
+            hash.update(iso_utc().encode("UTF-8"))
             self.nonce = hash.hexdigest()
         else:
             self.nonce = text
@@ -96,14 +96,14 @@ class AutoUsernameToken(UsernameToken):
         if self.password is not None:
             password = self.password
             if self.digest:
-                password = self.get_digest()
+                password = self.get_digest().decode('utf-8')
             p = Element('Password', ns=WSSENS)
             p.setText(password)
             p.set('Type', DIGEST_TYPE if self.digest else TEXT_TYPE)
             root.append(p)
         if self.nonce is not None:
             n = Element('Nonce', ns=WSSENS)
-            n.setText(base64.encodestring(self.nonce)[:-1])
+            n.setText(base64.b64encode(bytes(self.nonce, 'utf-8')).decode('utf-8'))
             n.set('EncodingType', BASE64_ENC_TYPE)
             root.append(n)
         if self.created:
@@ -117,8 +117,7 @@ class AutoUsernameToken(UsernameToken):
         created = iso_utc(self.created) if self.created else ""
         password = str(self.password)
         message = nonce + created + password
-        return base64.encodestring(sha1(message).digest())[:-1]
-
+        return base64.encodestring(sha1(message.encode('utf-8')).digest())[:-1]
 
 class _WsseKeywords(object):
 
